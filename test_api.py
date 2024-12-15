@@ -336,3 +336,48 @@ def test_delete_qualification_success(client):
     response = client.delete("/qualifications/Q001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 200
     assert response.get_json() == {"message": "Qualification deleted successfully"}
+
+# TRAINING COURSES CRUD Tests
+def test_get_training_courses_success(client):
+    client, mock_mysql = client
+    courses = [
+        {"course_id": "C001", "course_details": "Basic Security Training", "status": "active"}
+    ]
+    setup_mock_db(mock_mysql, query_result=courses)
+
+    response = client.get("/training_courses", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(courses)
+
+def test_add_training_course_success(client):
+    client, mock_mysql = client
+    new_course = {
+        "course_id": "C002",
+        "course_details": "Advanced Security Training",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/training_courses", json=new_course, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Course added successfully"}
+
+def test_update_training_course_success(client):
+    client, mock_mysql = client
+    updated_course = {
+        "course_details": "Expert Security Training",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/training_courses/C001", json=updated_course, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Course updated successfully"}
+
+def test_delete_training_course_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/training_courses/C001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Course deleted successfully"}
