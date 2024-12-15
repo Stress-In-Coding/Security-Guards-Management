@@ -388,3 +388,9 @@ def test_404_error(client):
     response = client.get("/non_existent_route", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 404
     assert response.get_json() == {"error": "Not found"}
+# Test error handling for bad requests
+def test_400_error(client):
+    client, _ = client
+    response = client.post("/clients", json={}, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 400
+    assert "error" in response.get_json()
