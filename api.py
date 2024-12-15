@@ -25,3 +25,40 @@ jwt = JWTManager(app)
 
 # Initialize MySQL with Flask app
 mysql = MySQL(app)
+
+# Custom error handler for 404 Not Found error
+@app.errorhandler(404)
+def not_found(error):
+    # Respond with a JSON error message and 404 status code
+    return make_response(jsonify({"error": "Not found"}), 404)
+
+# Custom error handler for 400 Bad Request error
+@app.errorhandler(400)
+def bad_request(error):
+    # Respond with a JSON error message and 400 status code
+    return make_response(jsonify({"error": "Bad request"}), 400)
+
+# JWT Authentication Decorator
+# This ensures that the request has a valid JWT token
+def token_required(f):
+    @wraps(f)
+    @jwt_required()  # Use flask_jwt_extended's jwt_required decorator
+    def decorated(*args, **kwargs):
+        # Get the identity of the current user
+        current_user = get_jwt_identity()
+        request.user = current_user  # Attach user data to the request
+        return f(*args, **kwargs)
+    return decorated
+
+# Role-based Access Control Decorator
+# This ensures that the user has the required role to access the endpoint
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            # Check if user has the required role
+            if not hasattr(request, "user") or request.user.get("role") != role:
+                return make_response(jsonify({"error": "Access forbidden"}), 403)
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
