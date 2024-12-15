@@ -448,3 +448,23 @@ def test_add_client_missing_fields(client):
     response = client.post("/clients", json=incomplete_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 400
     assert response.get_json() == {"error": "Missing required fields"}
+
+# Test updating a non-existent client
+def test_update_non_existent_client(client):
+    client, mock_mysql = client
+    updated_client = {
+        "client_details": {"name": "Non-existent Client", "contact": "000000000"},
+        "status": "inactive"
+    }
+    setup_mock_db(mock_mysql, rowcount=0)  # Simulate no rows updated
+    response = client.put("/clients/C999", json=updated_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Client not found"}
+
+# Test deleting a non-existent employee
+def test_delete_non_existent_employee(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=0)  # Simulate no rows deleted
+    response = client.delete("/employees/E999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Employee not found"}
