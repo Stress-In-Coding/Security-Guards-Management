@@ -381,3 +381,10 @@ def test_delete_training_course_success(client):
     response = client.delete("/training_courses/C001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 200
     assert response.get_json() == {"message": "Course deleted successfully"}
+
+# Test error handling for invalid routes
+def test_404_error(client):
+    client, _ = client
+    response = client.get("/non_existent_route", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Not found"}
