@@ -655,3 +655,28 @@ def clients():
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')  # Ensure this template contains the desired HTML content
+
+# Route to handle user registration
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    hashed_password = generate_password_hash(password)
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", (username, hashed_password))
+        mysql.connection.commit()
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+
+# Run the Flask application
+if __name__ == "__main__":
+    app.run(debug=True)  # Start the Flask application in debug mode
