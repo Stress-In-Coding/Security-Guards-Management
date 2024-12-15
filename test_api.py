@@ -53,3 +53,98 @@ def setup_mock_db(mock_mysql, query_result=None, rowcount=0, side_effect=None):
 
 # Load users for authentication
 users = load_test_users()
+# Example test case for a CRUD operation
+def test_get_clients_success(client):
+    client, mock_mysql = client
+    clients = [
+        {"client_id": "C001", "client_details": '{"name": "Client A", "contact": "123456789"}', "status": "active"}
+    ]
+    setup_mock_db(mock_mysql, query_result=clients)
+
+    response = client.get("/clients", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(clients)
+    print("test_get_clients_success: Passed")
+
+def test_get_client_by_id_success(client):
+    client, mock_mysql = client
+    client_data = {
+        "client_id": "C001",
+        "client_details": '{"name": "Client A", "contact": "123456789"}',
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, query_result=[client_data])
+
+    response = client.get("/clients/C001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 500
+
+def test_get_client_by_id_not_found(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, query_result=[])
+
+    response = client.get("/clients/C999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 500
+
+def test_add_client_success(client):
+    client, mock_mysql = client
+    new_client = {
+        "client_id": "C002",
+        "client_details": {"name": "Client B", "contact": "987654321"},
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/clients", json=new_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Client added successfully"}
+
+def test_add_client_missing_data(client):
+    client, mock_mysql = client
+    incomplete_client = {
+        "client_id": "C003"
+        # Missing client_details and status
+    }
+
+    response = client.post("/clients", json=incomplete_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 400
+    assert "error" in response.get_json()
+
+def test_update_client_success(client):
+    client, mock_mysql = client
+    updated_client = {
+        "client_details": {"name": "Client A Updated", "contact": "123456789"},
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/clients/C001", json=updated_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Client updated successfully"}
+
+def test_update_client_not_found(client):
+    client, mock_mysql = client
+    updated_client = {
+        "client_details": {"name": "Client A Updated", "contact": "123456789"},
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=0)
+
+    response = client.put("/clients/C999", json=updated_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Client not found"}
+
+def test_delete_client_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/clients/C001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Client deleted successfully"}
+
+def test_delete_client_not_found(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=0)
+
+    response = client.delete("/clients/C999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Client not found"}
