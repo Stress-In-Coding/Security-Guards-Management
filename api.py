@@ -177,3 +177,88 @@ def delete_client(client_id):
         return make_response(jsonify({"message": "Client deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+# EMPLOYEES CRUD
+# Route to get all employees (requires JWT token)
+@app.route("/employees", methods=["GET"])
+def get_employees():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all employees
+        cur.execute("SELECT * FROM employees")
+        data = cur.fetchall()
+        cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to get a specific employee by ID (requires JWT token)
+@app.route("/employees/<string:employee_id>", methods=["GET"])
+def get_employee_by_id(employee_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get employee by ID
+        cur.execute("SELECT * FROM employees WHERE employee_id = %s", (employee_id,))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            # If employee not found, respond with error message
+            return make_response(jsonify({"error": "Employee not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to add a new employee (requires JWT token)
+@app.route("/employees", methods=["POST"])
+def add_employee():
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Insert new employee into the database
+        cur.execute(
+            """INSERT INTO employees (employee_id, category_code, employee_details, status) 
+            VALUES (%s, %s, %s, %s)""",
+            (info["employee_id"], info["category_code"], info["employee_details"], info["status"])
+        )
+        mysql.connection.commit()
+        cur.close()
+        return make_response(jsonify({"message": "Employee added successfully"}), 201)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to update an existing employee (requires JWT token)
+@app.route("/employees/<string:employee_id>", methods=["PUT"])
+def update_employee(employee_id):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update employee details in the database
+        cur.execute(
+            """UPDATE employees SET category_code = %s, employee_details = %s, status = %s 
+            WHERE employee_id = %s""",
+            (info["category_code"], info["employee_details"], info["status"], employee_id)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the employee was not found
+            return make_response(jsonify({"error": "Employee not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Employee updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete an employee (requires JWT token)
+@app.route("/employees/<string:employee_id>", methods=["DELETE"])
+def delete_employee(employee_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete employee from the database
+        cur.execute("DELETE FROM employees WHERE employee_id = %s", (employee_id,))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the employee was not found
+            return make_response(jsonify({"error": "Employee not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Employee deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
