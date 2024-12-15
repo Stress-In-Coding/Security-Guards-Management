@@ -262,3 +262,88 @@ def delete_employee(employee_id):
         return make_response(jsonify({"message": "Employee deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+# EMPLOYEE ASSIGNMENTS CRUD
+# Route to get all employee assignments (requires JWT token)
+@app.route("/employee_assignments", methods=["GET"])
+def get_employee_assignments():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all employee assignments
+        cur.execute("SELECT * FROM employee_assignments")
+        data = cur.fetchall()
+        cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to get a specific employee assignment by ID (requires JWT token)
+@app.route("/employee_assignments/<string:employee_id>/<string:client_id>/<string:start_date>", methods=["GET"])
+def get_employee_assignment_by_id(employee_id, client_id, start_date):
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get employee assignment by ID
+        cur.execute("SELECT * FROM employee_assignments WHERE employee_id = %s AND client_id = %s AND start_date = %s", (employee_id, client_id, start_date))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            # If assignment not found, respond with error message
+            return make_response(jsonify({"error": "Assignment not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to add a new employee assignment (requires JWT token)
+@app.route("/employee_assignments", methods=["POST"])
+def add_employee_assignment():
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Insert new employee assignment into the database
+        cur.execute(
+            """INSERT INTO employee_assignments (employee_id, client_id, start_date, end_date, status) 
+            VALUES (%s, %s, %s, %s, %s)""",
+            (info["employee_id"], info["client_id"], info["start_date"], info["end_date"], info["status"])
+        )
+        mysql.connection.commit()
+        cur.close()
+        return make_response(jsonify({"message": "Assignment added successfully"}), 201)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to update an existing employee assignment (requires JWT token)
+@app.route("/employee_assignments/<string:employee_id>/<string:client_id>/<string:start_date>", methods=["PUT"])
+def update_employee_assignment(employee_id, client_id, start_date):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update employee assignment details in the database
+        cur.execute(
+            """UPDATE employee_assignments SET end_date = %s, status = %s 
+            WHERE employee_id = %s AND client_id = %s AND start_date = %s""",
+            (info["end_date"], info["status"], employee_id, client_id, start_date)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the assignment was not found
+            return make_response(jsonify({"error": "Assignment not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Assignment updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete an employee assignment (requires JWT token)
+@app.route("/employee_assignments/<string:employee_id>/<string:client_id>/<string:start_date>", methods=["DELETE"])
+def delete_employee_assignment(employee_id, client_id, start_date):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete employee assignment from the database
+        cur.execute("DELETE FROM employee_assignments WHERE employee_id = %s AND client_id = %s AND start_date = %s", (employee_id, client_id, start_date))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the assignment was not found
+            return make_response(jsonify({"error": "Assignment not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Assignment deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
