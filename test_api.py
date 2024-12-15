@@ -468,3 +468,23 @@ def test_delete_non_existent_employee(client):
     response = client.delete("/employees/E999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 404
     assert response.get_json() == {"error": "Employee not found"}
+
+# Test adding a training course with invalid data
+def test_add_training_course_invalid_data(client):
+    client, mock_mysql = client
+    invalid_course = {
+        "course_id": "C003",
+        # Missing course_details and status
+    }
+    response = client.post("/training_courses", json=invalid_course, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 500
+
+# Test getting a non-existent qualification
+def test_get_non_existent_qualification(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, query_result=[])  # Simulate no data found
+    response = client.get("/qualifications/Q999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 500
+
+if __name__ == "__main__":
+    pytest.main()
