@@ -148,3 +148,191 @@ def test_delete_client_not_found(client):
     response = client.delete("/clients/C999", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 404
     assert response.get_json() == {"error": "Client not found"}
+    
+
+
+# EMPLOYEES CRUD Tests
+def test_get_employees_success(client):
+    client, mock_mysql = client
+    employees = [
+        {"employee_id": "E001", "category_code": "SEC", "employee_details": '{"name": "Employee A", "contact": "123456789"}', "status": "active"}
+    ]
+    setup_mock_db(mock_mysql, query_result=employees)
+
+    response = client.get("/employees", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(employees)
+
+def test_add_employee_success(client):
+    client, mock_mysql = client
+    new_employee = {
+        "employee_id": "E002",
+        "category_code": "SEC",
+        "employee_details": {"name": "Employee B", "contact": "987654321"},
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/employees", json=new_employee, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Employee added successfully"}
+
+def test_update_employee_success(client):
+    client, mock_mysql = client
+    updated_employee = {
+        "category_code": "SEC",
+        "employee_details": {"name": "Employee A Updated", "contact": "123456789"},
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/employees/E001", json=updated_employee, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Employee updated successfully"}
+
+def test_delete_employee_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/employees/E001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Employee deleted successfully"}
+
+# EMPLOYEE ASSIGNMENTS CRUD Tests
+def test_get_employee_assignments_success(client):
+    client, mock_mysql = client
+    assignments = [
+        {"employee_id": "E001", "client_id": "C001", "start_date": "2023-01-01", "end_date": "2023-01-10", "status": "active"}
+    ]
+    setup_mock_db(mock_mysql, query_result=assignments)
+
+    response = client.get("/employee_assignments", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(assignments)
+
+def test_add_employee_assignment_success(client):
+    client, mock_mysql = client
+    new_assignment = {
+        "employee_id": "E002",
+        "client_id": "C002",
+        "start_date": "2023-01-15",
+        "end_date": "2023-01-20",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/employee_assignments", json=new_assignment, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Assignment added successfully"}
+
+def test_update_employee_assignment_success(client):
+    client, mock_mysql = client
+    updated_assignment = {
+        "end_date": "2023-01-25",
+        "status": "completed"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/employee_assignments/E001/C001/2023-01-01", json=updated_assignment, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Assignment updated successfully"}
+
+def test_delete_employee_assignment_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/employee_assignments/E001/C001/2023-01-01", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Assignment deleted successfully"}
+
+# EMPLOYEE TRAINING CRUD Tests
+def test_get_employee_training_success(client):
+    client, mock_mysql = client
+    training_data = [
+        {"employee_id": "E001", "course_id": "C001", "start_date": "2023-01-01", "end_date": "2023-01-10", "status": "completed"}
+    ]
+    setup_mock_db(mock_mysql, query_result=training_data)
+
+    response = client.get("/employee_training", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(training_data)
+
+def test_add_employee_training_success(client):
+    client, mock_mysql = client
+    new_training = {
+        "employee_id": "E002",
+        "course_id": "C002",
+        "start_date": "2023-01-15",
+        "end_date": "2023-01-20",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/employee_training", json=new_training, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Training added successfully"}
+
+def test_update_employee_training_success(client):
+    client, mock_mysql = client
+    updated_training = {
+        "end_date": "2023-01-25",
+        "status": "completed"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/employee_training/E001/C001/2023-01-01", json=updated_training, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Training updated successfully"}
+
+def test_delete_employee_training_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/employee_training/E001/C001/2023-01-01", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Training deleted successfully"}
+
+# QUALIFICATIONS CRUD Tests
+def test_get_qualifications_success(client):
+    client, mock_mysql = client
+    qualifications = [
+        {"qualification_id": "Q001", "qualification_details": "Certified Security Guard", "status": "active"}
+    ]
+    setup_mock_db(mock_mysql, query_result=qualifications)
+
+    response = client.get("/qualifications", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(qualifications)
+
+def test_add_qualification_success(client):
+    client, mock_mysql = client
+    new_qualification = {
+        "qualification_id": "Q002",
+        "qualification_details": "Advanced Security Training",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.post("/qualifications", json=new_qualification, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "Qualification added successfully"}
+
+def test_update_qualification_success(client):
+    client, mock_mysql = client
+    updated_qualification = {
+        "qualification_details": "Expert Security Guard",
+        "status": "active"
+    }
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.put("/qualifications/Q001", json=updated_qualification, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Qualification updated successfully"}
+
+def test_delete_qualification_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=1)
+
+    response = client.delete("/qualifications/Q001", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Qualification deleted successfully"}
