@@ -84,3 +84,96 @@ def login():
         return jsonify({"token": token}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
+# CLIENTS CRUD
+# Route to get all clients (requires JWT token)
+@app.route("/clients", methods=["GET"])
+@token_required
+ # Apply token_required decorator to secure the endpoint
+def get_clients():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all clients
+        cur.execute("SELECT * FROM clients")
+        clients_data = cur.fetchall()
+        for client in clients_data:
+            # Parse client details from JSON string to dictionary
+            client['client_details'] = json.loads(client['client_details'])
+        cur.close()
+        return jsonify(clients_data), 200  # Return clients data as JSON
+    except Exception as e:
+        # If any error occurs, respond with error message
+        return jsonify({"error": str(e)}), 500
+
+# Route to get a specific client by ID (requires JWT token)
+@app.route("/clients/<string:client_id>", methods=["GET"])
+def get_client_by_id(client_id):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM clients WHERE client_id = %s", (client_id,))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            return make_response(jsonify({"error": "Client not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        print(f"Error fetching client by ID: {e}")  # Log the error
+        return make_response(jsonify({"error": "Internal server error"}), 500)
+
+# Route to add a new client (requires JWT token)
+@app.route("/clients", methods=["POST"])
+
+def add_client():
+    try:
+        data = request.get_json()
+        if not data or 'client_id' not in data or 'client_details' not in data:
+            return make_response(jsonify({"error": "Missing required fields"}), 400)
+
+        client_id = data['client_id']
+        client_details = json.dumps(data['client_details'])
+        status = data.get('status', 'active')
+
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO clients (client_id, client_details, status) VALUES (%s, %s, %s)", (client_id, client_details, status))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({"message": "Client added successfully"}), 201
+    except Exception as e:
+        print(f"Error adding client: {e}")  # Log the error
+        return jsonify({"error": "Internal server error"}), 500
+
+# Route to update an existing client (requires JWT token)
+@app.route("/clients/<string:client_id>", methods=["PUT"])
+def update_client(client_id):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update client details in the database
+        cur.execute(
+            """UPDATE clients SET client_details = %s, status = %s 
+            WHERE client_id = %s""",
+            (info["client_details"], info["status"], client_id)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the client was not found
+            return make_response(jsonify({"error": "Client not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Client updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete a client (requires JWT token)
+@app.route("/clients/<string:client_id>", methods=["DELETE"])
+def delete_client(client_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete client from the database
+        cur.execute("DELETE FROM clients WHERE client_id = %s", (client_id,))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the client was not found
+            return make_response(jsonify({"error": "Client not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Client deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
