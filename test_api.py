@@ -394,3 +394,19 @@ def test_400_error(client):
     response = client.post("/clients", json={}, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 400
     assert "error" in response.get_json()
+
+
+# Test database connection
+def test_db_connection_success(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, query_result=[(1,)])
+
+    response = client.get("/test_db_connection", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Database connection successful"}
+
+# Test unauthorized access
+def test_unauthorized_access(client):
+    client, _ = client
+    response = client.get("/clients")
+    assert response.status_code == 401
