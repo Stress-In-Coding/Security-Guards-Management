@@ -410,3 +410,21 @@ def test_unauthorized_access(client):
     client, _ = client
     response = client.get("/clients")
     assert response.status_code == 401
+
+# Test invalid JSON input
+def test_invalid_json_input(client):
+    client, _ = client
+    response = client.post("/clients", data="Invalid JSON", headers={
+        "Authorization": f"Bearer {generate_test_token('testuser', 'admin')}",
+        "Content-Type": "application/json"
+    })
+    assert response.status_code == 500
+
+# Test database error handling
+def test_database_error_handling(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, side_effect=Exception("Database error"))
+
+    response = client.get("/clients", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 500
+    assert "error" in response.get_json()
