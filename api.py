@@ -602,3 +602,56 @@ def delete_training_course(course_id):
         return make_response(jsonify({"message": "Course deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+
+# Route to test database connection
+@app.route("/test_db_connection", methods=["GET"])
+def test_db_connection():
+    try:
+        cur = mysql.connection.cursor()
+        # Simple query to test database connection
+        cur.execute("SELECT 1")
+        cur.close()
+        return jsonify({"message": "Database connection successful"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Mocking for testing purposes
+@patch('api.token_required', lambda f: f)  # Mock the token_required decorator
+@patch('api.mysql.connection.cursor')  # Mock the database cursor
+def test_get_clients(mock_cursor, client):
+    # Mock data to be returned by the database
+    mock_cursor.return_value.fetchall.return_value = [
+        {"client_id": "C001", "client_details": '{"name": "Client A", "contact": "123456789"}', "status": "active"}
+    ]
+    # Simulate a GET request to the /clients endpoint
+    response = client.get("/clients", headers={"Authorization": "Bearer test_token"})
+    assert response.status_code == 200  # Assert that the response status code is 200
+
+# Route for home page
+@app.route('/')
+def home():
+    # Render the base.html template for the home page
+    return render_template('base.html')
+
+# Route to display clients on the home page
+@app.route('/clients')
+def clients():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all clients
+        cur.execute("SELECT * FROM clients")
+        clients_data = cur.fetchall()
+        # Convert client_details from JSON string to dictionary
+        for client in clients_data:
+            client['client_details'] = json.loads(client['client_details'])
+        cur.close()
+        # Render the base.html template with clients data
+        return render_template('base.html', clients=clients_data)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to display the dashboard
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')  # Ensure this template contains the desired HTML content
