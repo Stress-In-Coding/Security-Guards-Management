@@ -428,3 +428,23 @@ def test_database_error_handling(client):
     response = client.get("/clients", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
     assert response.status_code == 500
     assert "error" in response.get_json()
+
+# Test client deletion with invalid ID
+def test_delete_client_invalid_id(client):
+    client, mock_mysql = client
+    setup_mock_db(mock_mysql, rowcount=0)
+
+    response = client.delete("/clients/INVALID_ID", headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Client not found"}
+
+# Test adding a client with missing fields
+def test_add_client_missing_fields(client):
+    client, mock_mysql = client
+    incomplete_client = {
+        "client_id": "C004"
+        # Missing client_details and status
+    }
+    response = client.post("/clients", json=incomplete_client, headers={"Authorization": f"Bearer {generate_test_token('testuser', 'admin')}"})
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "Missing required fields"}
