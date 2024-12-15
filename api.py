@@ -62,3 +62,25 @@ def role_required(role):
             return f(*args, **kwargs)
         return decorated
     return decorator
+
+# Route to handle user login and JWT generation
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+    user = cur.fetchone()
+    cur.close()
+
+    if user and check_password_hash(user['password_hash'], password):
+        # Use the username as the identity
+        token = create_access_token(identity=username)
+        return jsonify({"token": token}), 200
+
+    return jsonify({"error": "Invalid credentials"}), 401
