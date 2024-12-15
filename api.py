@@ -347,3 +347,88 @@ def delete_employee_assignment(employee_id, client_id, start_date):
         return make_response(jsonify({"message": "Assignment deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+# EMPLOYEE TRAINING CRUD
+# Route to get all employee training records (requires JWT token)
+@app.route("/employee_training", methods=["GET"])
+def get_employee_training():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all employee training records
+        cur.execute("SELECT * FROM employee_training")
+        data = cur.fetchall()
+        cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to get a specific employee training record by ID (requires JWT token)
+@app.route("/employee_training/<string:employee_id>/<string:course_id>/<string:start_date>", methods=["GET"])
+def get_employee_training_by_id(employee_id, course_id, start_date):
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get employee training record by ID
+        cur.execute("SELECT * FROM employee_training WHERE employee_id = %s AND course_id = %s AND start_date = %s", (employee_id, course_id, start_date))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            # If training record not found, respond with error message
+            return make_response(jsonify({"error": "Training not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to add a new employee training record (requires JWT token)
+@app.route("/employee_training", methods=["POST"])
+def add_employee_training():
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Insert new employee training record into the database
+        cur.execute(
+            """INSERT INTO employee_training (employee_id, course_id, start_date, end_date, status) 
+            VALUES (%s, %s, %s, %s, %s)""",
+            (info["employee_id"], info["course_id"], info["start_date"], info["end_date"], info["status"])
+        )
+        mysql.connection.commit()
+        cur.close()
+        return make_response(jsonify({"message": "Training added successfully"}), 201)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to update an existing employee training record (requires JWT token)
+@app.route("/employee_training/<string:employee_id>/<string:course_id>/<string:start_date>", methods=["PUT"])
+def update_employee_training(employee_id, course_id, start_date):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update employee training record details in the database
+        cur.execute(
+            """UPDATE employee_training SET end_date = %s, status = %s 
+            WHERE employee_id = %s AND course_id = %s AND start_date = %s""",
+            (info["end_date"], info["status"], employee_id, course_id, start_date)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the training record was not found
+            return make_response(jsonify({"error": "Training not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Training updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete an employee training record (requires JWT token)
+@app.route("/employee_training/<string:employee_id>/<string:course_id>/<string:start_date>", methods=["DELETE"])
+def delete_employee_training(employee_id, course_id, start_date):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete employee training record from the database
+        cur.execute("DELETE FROM employee_training WHERE employee_id = %s AND course_id = %s AND start_date = %s", (employee_id, course_id, start_date))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the training record was not found
+            return make_response(jsonify({"error": "Training not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Training deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
