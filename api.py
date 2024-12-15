@@ -517,3 +517,88 @@ def delete_qualification(qualification_id):
         return make_response(jsonify({"message": "Qualification deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+# TRAINING COURSES CRUD
+# Route to get all training courses (requires JWT token)
+@app.route("/training_courses", methods=["GET"])
+def get_training_courses():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all training courses
+        cur.execute("SELECT * FROM training_courses")
+        data = cur.fetchall()
+        cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to get a specific training course by ID (requires JWT token)
+@app.route("/training_courses/<string:course_id>", methods=["GET"])
+def get_training_course_by_id(course_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get training course by ID
+        cur.execute("SELECT * FROM training_courses WHERE course_id = %s", (course_id,))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            # If course not found, respond with error message
+            return make_response(jsonify({"error": "Course not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to add a new training course (requires JWT token)
+@app.route("/training_courses", methods=["POST"])
+def add_training_course():
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Insert new training course into the database
+        cur.execute(
+            """INSERT INTO training_courses (course_id, course_details, status) 
+            VALUES (%s, %s, %s)""",
+            (info["course_id"], info["course_details"], info["status"])
+        )
+        mysql.connection.commit()
+        cur.close()
+        return make_response(jsonify({"message": "Course added successfully"}), 201)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to update an existing training course (requires JWT token)
+@app.route("/training_courses/<string:course_id>", methods=["PUT"])
+def update_training_course(course_id):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update training course details in the database
+        cur.execute(
+            """UPDATE training_courses SET course_details = %s, status = %s 
+            WHERE course_id = %s""",
+            (info["course_details"], info["status"], course_id)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the course was not found
+            return make_response(jsonify({"error": "Course not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Course updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete a training course (requires JWT token)
+@app.route("/training_courses/<string:course_id>", methods=["DELETE"])
+def delete_training_course(course_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete training course from the database
+        cur.execute("DELETE FROM training_courses WHERE course_id = %s", (course_id,))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the course was not found
+            return make_response(jsonify({"error": "Course not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Course deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
