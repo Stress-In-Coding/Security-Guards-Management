@@ -432,3 +432,88 @@ def delete_employee_training(employee_id, course_id, start_date):
         return make_response(jsonify({"message": "Training deleted successfully"}), 200)
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
+# QUALIFICATIONS CRUD
+# Route to get all qualifications (requires JWT token)
+@app.route("/qualifications", methods=["GET"])
+def get_qualifications():
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get all qualifications
+        cur.execute("SELECT * FROM qualifications")
+        data = cur.fetchall()
+        cur.close()
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to get a specific qualification by ID (requires JWT token)
+@app.route("/qualifications/<string:qualification_id>", methods=["GET"])
+def get_qualification_by_id(qualification_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Query to get qualification by ID
+        cur.execute("SELECT * FROM qualifications WHERE qualification_id = %s", (qualification_id,))
+        data = cur.fetchone()
+        cur.close()
+        if not data:
+            # If qualification not found, respond with error message
+            return make_response(jsonify({"error": "Qualification not found"}), 404)
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to add a new qualification (requires JWT token)
+@app.route("/qualifications", methods=["POST"])
+def add_qualification():
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Insert new qualification into the database
+        cur.execute(
+            """INSERT INTO qualifications (qualification_id, qualification_details, status) 
+            VALUES (%s, %s, %s)""",
+            (info["qualification_id"], info["qualification_details"], info["status"])
+        )
+        mysql.connection.commit()
+        cur.close()
+        return make_response(jsonify({"message": "Qualification added successfully"}), 201)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to update an existing qualification (requires JWT token)
+@app.route("/qualifications/<string:qualification_id>", methods=["PUT"])
+def update_qualification(qualification_id):
+    try:
+        info = request.get_json()  # Get JSON data from request
+        cur = mysql.connection.cursor()
+        # Update qualification details in the database
+        cur.execute(
+            """UPDATE qualifications SET qualification_details = %s, status = %s 
+            WHERE qualification_id = %s""",
+            (info["qualification_details"], info["status"], qualification_id)
+        )
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were updated, the qualification was not found
+            return make_response(jsonify({"error": "Qualification not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Qualification updated successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+# Route to delete a qualification (requires JWT token)
+@app.route("/qualifications/<string:qualification_id>", methods=["DELETE"])
+def delete_qualification(qualification_id):
+    try:
+        cur = mysql.connection.cursor()
+        # Delete qualification from the database
+        cur.execute("DELETE FROM qualifications WHERE qualification_id = %s", (qualification_id,))
+        mysql.connection.commit()
+        if cur.rowcount == 0:
+            # If no rows were deleted, the qualification was not found
+            return make_response(jsonify({"error": "Qualification not found"}), 404)
+        cur.close()
+        return make_response(jsonify({"message": "Qualification deleted successfully"}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
