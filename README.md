@@ -70,7 +70,7 @@ To generate fake data for testing, run the `generate_fake_data.py` script. This 
 
 Use conventional commits for clear and structured commit messages:
 
-- `feat`: Add new features (e.g., `feat: add user authentication`)
+- `add`: Add new features (e.g., `feat: add user authentication`)
 - `fix`: Fix bugs or issues (e.g., `fix: resolve database connection issue`)
-- `docs`: Update or add documentation (e.g., `docs: update API documentation`)
+- `create`: Update or add documentation (e.g., `docs: update API documentation`)
 - `test`: Add or update tests (e.g., `test: add user registration tests`)
