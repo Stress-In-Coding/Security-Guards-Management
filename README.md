@@ -74,3 +74,12 @@ Use conventional commits for clear and structured commit messages:
 - `fix`: Fix bugs or issues (e.g., `fix: resolve database connection issue`)
 - `create`: Update or add documentation (e.g., `docs: update API documentation`)
 - `test`: Add or update tests (e.g., `test: add user registration tests`)
+
+## ERD
+![ERD](C:\Users\tanta\OneDrive\Desktop\Security-Guards-Management)
+
+## Deployment
+You can access the deployed application at [PythonAnywhere URL](https://espencer.pythonanywhere.com/).
+
+## Video Presentation
+Watch the video presentation here: [Video Link](your_video_link).

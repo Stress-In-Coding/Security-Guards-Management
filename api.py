@@ -87,7 +87,7 @@ def login():
 # CLIENTS CRUD
 # Route to get all clients (requires JWT token)
 @app.route("/clients", methods=["GET"])
-# @token_required
+@token_required
  # Apply token_required decorator to secure the endpoint
 def get_clients():
     try:
