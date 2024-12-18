@@ -82,4 +82,4 @@ Use conventional commits for clear and structured commit messages:
 You can access the deployed application at [PythonAnywhere URL](https://espencer.pythonanywhere.com/).
 
 ## Video Presentation
-Watch the video presentation here: [Video Link](your_video_link).
+Watch the video presentation here: [Video Link]([your_video_link](https://drive.google.com/file/d/1FGdZf3E_F95OgIoQ-32ikjZ0FhLbuEc3/view?usp=drive_link).
